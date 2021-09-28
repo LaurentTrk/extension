@@ -21,8 +21,6 @@ import RequestExtrinsicSign from '../RequestExtrinsicSign';
 import State from './State';
 import { createSubscription, unsubscribe } from './subscriptions';
 
-import { convertPublicKeyToCurve25519 } from '@polkadot/util-crypto';
-
 function transformAccounts (accounts: SubjectInfo, anyType = false): InjectedAccount[] {
   return Object
     .values(accounts)
