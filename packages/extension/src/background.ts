@@ -25,6 +25,17 @@ chrome.runtime.onConnect.addListener((port): void => {
   port.onDisconnect.addListener(() => console.log(`Disconnected from ${port.name}`));
 });
 
+// listen to all messages and handle appropriately
+chrome.runtime.onConnectExternal.addListener((port): void => {
+  // shouldn't happen, however... only listen to what we know about
+  // assert([PORT_CONTENT, PORT_EXTENSION].includes(port.name), `Unknown connection from ${port.name}`);
+
+  // message and disconnect handlers
+  console.log('adding external message listener');
+  port.onMessage.addListener((data) => handlers(data, port));
+  port.onDisconnect.addListener(() => console.log(`Disconnected from ${port.name}`));
+});
+
 // initial setup
 cryptoWaitReady()
   .then((): void => {
