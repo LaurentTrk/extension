@@ -4,9 +4,9 @@
 import type { InjectedAccount, InjectedMetadataKnown, MetadataDef, ProviderMeta } from '@polkadot/extension-inject/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { JsonRpcResponse } from '@polkadot/rpc-provider/types';
-import type { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
+import type { SignerPayloadJSON, SignerPayloadRaw, DecryptPayloadRaw } from '@polkadot/types/types';
 import type { SubjectInfo } from '@polkadot/ui-keyring/observable/types';
-import type { MessageTypes, RequestAccountList, RequestAuthorizeTab, RequestRpcSend, RequestRpcSubscribe, RequestRpcUnsubscribe, RequestTypes, ResponseRpcListProviders, ResponseSigning, ResponseTypes, SubscriptionMessageTypes } from '../types';
+import type { MessageTypes, RequestAccountList, RequestAuthorizeTab, RequestRpcSend, RequestRpcSubscribe, RequestRpcUnsubscribe, RequestTypes, ResponseDecrypting, ResponseRpcListProviders, ResponseSigning, ResponseTypes, SubscriptionMessageTypes } from '../types';
 
 import { PHISHING_PAGE_REDIRECT } from '@polkadot/extension-base/defaults';
 import { canDerive } from '@polkadot/extension-base/utils';
@@ -16,9 +16,12 @@ import { accounts as accountsObservable } from '@polkadot/ui-keyring/observable/
 import { assert, isNumber } from '@polkadot/util';
 
 import RequestBytesSign from '../RequestBytesSign';
+import RequestBytesDecrypt from '../RequestBytesDecrypt';
 import RequestExtrinsicSign from '../RequestExtrinsicSign';
 import State from './State';
 import { createSubscription, unsubscribe } from './subscriptions';
+
+import { convertPublicKeyToCurve25519 } from '@polkadot/util-crypto';
 
 function transformAccounts (accounts: SubjectInfo, anyType = false): InjectedAccount[] {
   return Object
@@ -78,6 +81,13 @@ export default class Tabs {
     const pair = this.getSigningPair(address);
 
     return this.#state.sign(url, new RequestBytesSign(request), { address, ...pair.meta });
+  }
+
+  private bytesDecrypt (url: string, request: DecryptPayloadRaw): Promise<ResponseDecrypting> {
+    const address = request.address;
+    const pair = this.getSigningPair(address);
+
+    return this.#state.decrypt(url, new RequestBytesDecrypt(request), { address, ...pair.meta });
   }
 
   private extrinsicSign (url: string, request: SignerPayloadJSON): Promise<ResponseSigning> {
@@ -190,6 +200,9 @@ export default class Tabs {
 
       case 'pub(bytes.sign)':
         return this.bytesSign(url, request as SignerPayloadRaw);
+
+      case 'pub(bytes.decrypt)':
+        return this.bytesDecrypt(url, request as DecryptPayloadRaw);
 
       case 'pub(extrinsic.sign)':
         return this.extrinsicSign(url, request as SignerPayloadJSON);

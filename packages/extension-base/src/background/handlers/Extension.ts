@@ -5,7 +5,7 @@ import type { MetadataDef } from '@polkadot/extension-inject/types';
 import type { KeyringPair, KeyringPair$Json, KeyringPair$Meta } from '@polkadot/keyring/types';
 import type { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
 import type { SubjectInfo } from '@polkadot/ui-keyring/observable/types';
-import type { AccountJson, AllowedPath, AuthorizeRequest, MessageTypes, MetadataRequest, RequestAccountBatchExport, RequestAccountChangePassword, RequestAccountCreateExternal, RequestAccountCreateHardware, RequestAccountCreateSuri, RequestAccountEdit, RequestAccountExport, RequestAccountForget, RequestAccountShow, RequestAccountTie, RequestAccountValidate, RequestAuthorizeApprove, RequestAuthorizeReject, RequestBatchRestore, RequestDeriveCreate, RequestDeriveValidate, RequestJsonRestore, RequestMetadataApprove, RequestMetadataReject, RequestSeedCreate, RequestSeedValidate, RequestSigningApprovePassword, RequestSigningApproveSignature, RequestSigningCancel, RequestSigningIsLocked, RequestTypes, ResponseAccountExport, ResponseAccountsExport, ResponseAuthorizeList, ResponseDeriveValidate, ResponseJsonGetAccountInfo, ResponseSeedCreate, ResponseSeedValidate, ResponseSigningIsLocked, ResponseType, SigningRequest } from '../types';
+import type { AccountJson, AllowedPath, AuthorizeRequest, DecryptingRequest, MessageTypes, MetadataRequest, RequestAccountBatchExport, RequestAccountChangePassword, RequestAccountCreateExternal, RequestAccountCreateHardware, RequestAccountCreateSuri, RequestAccountEdit, RequestAccountExport, RequestAccountForget, RequestAccountShow, RequestAccountTie, RequestAccountValidate, RequestAuthorizeApprove, RequestAuthorizeReject, RequestBatchRestore, RequestDecryptingApprove, RequestDeriveCreate, RequestDeriveValidate, RequestJsonRestore, RequestMetadataApprove, RequestMetadataReject, RequestSeedCreate, RequestSeedValidate, RequestSigningApprovePassword, RequestSigningApproveSignature, RequestSigningCancel, RequestSigningIsLocked, RequestTypes, ResponseAccountExport, ResponseAccountsExport, ResponseAuthorizeList, ResponseDeriveValidate, ResponseJsonGetAccountInfo, ResponseSeedCreate, ResponseSeedValidate, ResponseSigningIsLocked, ResponseType, SigningRequest, RequestDecryptingCancel, RequestDecryptingApprovePassword } from '../types';
 
 import { ALLOWED_PATH, PASSWORD_EXPIRY_MS } from '@polkadot/extension-base/defaults';
 import chrome from '@polkadot/extension-inject/chrome';
@@ -409,19 +409,23 @@ export default class Extension {
 
   private signingIsLocked ({ id }: RequestSigningIsLocked): ResponseSigningIsLocked {
     const queued = this.#state.getSignRequest(id);
+    let address;
+    if (queued) {
+      address = queued.request.payload.address;
+    }else{
+      const decryptRequest = this.#state.getDecryptingRequest(id);
+      address = decryptRequest.request.payload.address;
+    }
+    assert(address, 'Unable to find address from request');
 
-    assert(queued, 'Unable to find request');
-
-    const address = queued.request.payload.address;
     const pair = keyring.getPair(address);
-
     assert(pair, 'Unable to find pair');
 
     const remainingTime = this.refreshAccountPasswordCache(pair);
 
     return {
       isLocked: pair.isLocked,
-      remainingTime
+      remainingTime 
     };
   }
 
@@ -440,6 +444,108 @@ export default class Extension {
     return true;
   }
 
+  private decryptingSubscribe (id: string, port: chrome.runtime.Port): boolean {
+    console.log('decryptingSubscribe');
+    const cb = createSubscription<'pri(decrypting.requests)'>(id, port);
+    const subscription = this.#state.decryptSubject.subscribe((requests: DecryptingRequest[]): void =>
+      cb(requests)
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
+  }
+
+  private decryptingApprove ({ id, decrypted }: RequestDecryptingApprove): boolean {
+    const queued = this.#state.getDecryptingRequest(id);
+
+    assert(queued, 'Unable to find request');
+
+    const { resolve } = queued;
+
+    resolve({ id, decrypted});
+
+    return true;
+  }
+
+  private decryptingApprovePassword ({ id, password, savePass }: RequestDecryptingApprovePassword): boolean {
+    const queued = this.#state.getDecryptingRequest(id);
+
+    assert(queued, 'Unable to find request');
+
+    const { reject, request, resolve } = queued;
+    const pair = keyring.getPair(queued.account.address);
+
+    // unlike queued.account.address the following
+    // address is encoded with the default prefix
+    // which what is used for password caching mapping
+    const { address } = pair;
+
+    if (!pair) {
+      reject(new Error('Unable to find pair'));
+
+      return false;
+    }
+
+    this.refreshAccountPasswordCache(pair);
+
+    // if the keyring pair is locked, the password is needed
+    if (pair.isLocked && !password) {
+      reject(new Error('Password needed to unlock the account'));
+    }
+
+    if (pair.isLocked) {
+      pair.decodePkcs8(password);
+    }
+
+    // const { payload } = request;
+
+    // if (isJsonPayload(payload)) {
+    //   // Get the metadata for the genesisHash
+    //   const currentMetadata = this.#state.knownMetadata.find((meta: MetadataDef) =>
+    //     meta.genesisHash === payload.genesisHash);
+
+    //   // set the registry before calling the sign function
+    //   registry.setSignedExtensions(payload.signedExtensions, currentMetadata?.userExtensions);
+
+    //   if (currentMetadata) {
+    //     registry.register(currentMetadata?.types);
+    //   }
+    // }
+
+    const result = request.decrypt(registry, pair, request.payload.recipientPublicKey);
+
+    if (savePass) {
+      this.#cachedUnlocks[address] = Date.now() + PASSWORD_EXPIRY_MS;
+    } else {
+      pair.lock();
+    }
+
+    resolve({
+      id,
+      ...result
+    });
+
+    return true;
+  }
+
+
+  private decryptingCancel ({ id }: RequestDecryptingCancel): boolean {
+    const queued = this.#state.getDecryptingRequest(id);
+
+    assert(queued, 'Unable to find request');
+
+    const { reject } = queued;
+
+    reject(new Error('Cancelled'));
+
+    return true;
+  }
+
+
   private windowOpen (path: AllowedPath): boolean {
     const url = `${chrome.extension.getURL('index.html')}#${path}`;
 
@@ -448,7 +554,7 @@ export default class Extension {
 
       return false;
     }
-
+ 
     console.log('open', url);
 
     // eslint-disable-next-line no-void
@@ -608,6 +714,18 @@ export default class Extension {
       case 'pri(signing.requests)':
         return this.signingSubscribe(id, port);
 
+      case 'pri(decrypting.requests)':
+        return this.decryptingSubscribe(id, port);
+  
+      case 'pri(decrypting.approve)':
+          return this.decryptingApprove(request as RequestDecryptingApprove);
+          
+      case 'pri(decrypting.approve.password)':
+        return this.decryptingApprovePassword(request as RequestDecryptingApprovePassword);
+
+      case 'pri(decrypting.cancel)':
+        return this.decryptingCancel(request as RequestDecryptingCancel);
+    
       case 'pri(window.open)':
         return this.windowOpen(request as AllowedPath);
 

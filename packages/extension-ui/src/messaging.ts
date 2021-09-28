@@ -1,7 +1,7 @@
 // Copyright 2019-2021 @polkadot/extension-ui authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { AccountJson, AllowedPath, AuthorizeRequest, MessageTypes, MessageTypesWithNoSubscriptions, MessageTypesWithNullRequest, MessageTypesWithSubscriptions, MetadataRequest, RequestTypes, ResponseAuthorizeList, ResponseDeriveValidate, ResponseJsonGetAccountInfo, ResponseSigningIsLocked, ResponseTypes, SeedLengths, SigningRequest, SubscriptionMessageTypes } from '@polkadot/extension-base/background/types';
+import type { AccountJson, AllowedPath, AuthorizeRequest, MessageTypes, MessageTypesWithNoSubscriptions, MessageTypesWithNullRequest, MessageTypesWithSubscriptions, MetadataRequest, RequestTypes, ResponseAuthorizeList, ResponseDeriveValidate, ResponseJsonGetAccountInfo, ResponseSigningIsLocked, ResponseTypes, SeedLengths, SigningRequest, SubscriptionMessageTypes, DecryptingRequest } from '@polkadot/extension-base/background/types';
 import type { Message } from '@polkadot/extension-base/types';
 import type { Chain } from '@polkadot/extension-chains/types';
 import type { KeyringPair$Json } from '@polkadot/keyring/types';
@@ -119,6 +119,20 @@ export async function approveSignSignature (id: string, signature: string): Prom
   return sendMessage('pri(signing.approve.signature)', { id, signature });
 }
 
+export async function approveDecrypting (id: string, decrypted: string): Promise<boolean> {
+  return sendMessage('pri(decrypting.approve)', { id, decrypted });
+}
+
+export async function approveDecryptPassword (id: string, savePass: boolean, password?: string): Promise<boolean> {
+  return sendMessage('pri(decrypting.approve.password)', { id, password, savePass });
+}
+
+
+export async function cancelDecryptRequest (id: string): Promise<boolean> {
+  return sendMessage('pri(decrypting.cancel)', { id });
+}
+
+
 export async function createAccountExternal (name: string, address: string, genesisHash: string): Promise<boolean> {
   return sendMessage('pri(accounts.create.external)', { address, genesisHash, name });
 }
@@ -202,6 +216,11 @@ export async function subscribeMetadataRequests (cb: (accounts: MetadataRequest[
 
 export async function subscribeSigningRequests (cb: (accounts: SigningRequest[]) => void): Promise<boolean> {
   return sendMessage('pri(signing.requests)', null, cb);
+}
+
+export async function subscribeDecryptingRequests (cb: (accounts: DecryptingRequest[]) => void): Promise<boolean> {
+  console.log('subscribeDecryptingRequests');
+  return sendMessage('pri(decrypting.requests)', null, cb);
 }
 
 export async function validateSeed (suri: string, type?: KeypairType): Promise<{ address: string; suri: string }> {

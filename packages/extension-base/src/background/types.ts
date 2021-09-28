@@ -6,9 +6,10 @@
 import type { InjectedAccount, InjectedMetadataKnown, MetadataDef, ProviderList, ProviderMeta } from '@polkadot/extension-inject/types';
 import type { KeyringPair, KeyringPair$Json, KeyringPair$Meta } from '@polkadot/keyring/types';
 import type { JsonRpcResponse } from '@polkadot/rpc-provider/types';
-import type { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
+import type { SignerPayloadJSON, SignerPayloadRaw, DecryptPayloadRaw } from '@polkadot/types/types';
 import type { KeyringPairs$Json } from '@polkadot/ui-keyring/types';
 import type { KeypairType } from '@polkadot/util-crypto/types';
+import type { HexString } from '@polkadot/util/types';
 
 import { TypeRegistry } from '@polkadot/types';
 
@@ -71,6 +72,14 @@ export interface SigningRequest {
   url: string;
 }
 
+export interface DecryptingRequest {
+  account: AccountJson;
+  id: string;
+  request: RequestDecrypt;
+  url: string;
+}
+
+
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
   // private/internal requests, i.e. from a popup
@@ -109,12 +118,17 @@ export interface RequestSignatures {
   'pri(signing.cancel)': [RequestSigningCancel, boolean];
   'pri(signing.isLocked)': [RequestSigningIsLocked, ResponseSigningIsLocked];
   'pri(signing.requests)': [RequestSigningSubscribe, boolean, SigningRequest[]];
+  'pri(decrypting.requests)': [RequestDecryptingSubscribe, boolean, DecryptingRequest[]];
+  'pri(decrypting.approve)': [RequestDecryptingApprove, boolean];
+  'pri(decrypting.approve.password)': [RequestSigningApprovePassword, boolean];
+  'pri(decrypting.cancel)': [RequestDecryptingCancel, boolean];
   'pri(window.open)': [AllowedPath, boolean];
   // public/external requests, i.e. from a page
   'pub(accounts.list)': [RequestAccountList, InjectedAccount[]];
   'pub(accounts.subscribe)': [RequestAccountSubscribe, boolean, InjectedAccount[]];
   'pub(authorize.tab)': [RequestAuthorizeTab, null];
   'pub(bytes.sign)': [SignerPayloadRaw, ResponseSigning];
+  'pub(bytes.decrypt)': [DecryptPayloadRaw, ResponseDecrypting];
   'pub(extrinsic.sign)': [SignerPayloadJSON, ResponseSigning];
   'pub(metadata.list)': [null, InjectedMetadataKnown[]];
   'pub(metadata.provide)': [MetadataDef, boolean];
@@ -293,6 +307,25 @@ export interface ResponseSigningIsLocked {
 }
 
 export type RequestSigningSubscribe = null;
+export type RequestDecryptingSubscribe = null;
+
+export interface RequestDecryptingApprove {
+  id: string;
+  decrypted: string;
+}
+
+export interface RequestDecryptingApprovePassword {
+  id: string;
+  password?: string;
+  savePass: boolean;
+}
+
+
+export interface RequestDecryptingCancel {
+  id: string;
+}
+
+
 
 export interface RequestSeedCreate {
   length?: SeedLengths;
@@ -337,6 +370,12 @@ export interface ResponseSigning {
   signature: string;
 }
 
+export interface ResponseDecrypting {
+  id: string;
+  decrypted: string;
+}
+
+
 export interface ResponseDeriveValidate {
   address: string;
   suri: string;
@@ -375,6 +414,12 @@ export interface RequestSign {
   readonly payload: SignerPayloadJSON | SignerPayloadRaw;
 
   sign (registry: TypeRegistry, pair: KeyringPair): { signature: string };
+}
+
+export interface RequestDecrypt {
+  readonly payload: DecryptPayloadRaw;
+
+  decrypt (registry: TypeRegistry, pair: KeyringPair, recipientPublicKey: HexString | string | Uint8Array): { decrypted: string };
 }
 
 export interface RequestJsonRestore {

@@ -1,7 +1,7 @@
 // Copyright 2019-2021 @polkadot/extension-ui authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { AccountJson, AccountsContext, AuthorizeRequest, MetadataRequest, SigningRequest } from '@polkadot/extension-base/background/types';
+import type { AccountJson, AccountsContext, AuthorizeRequest, MetadataRequest, SigningRequest, DecryptingRequest } from '@polkadot/extension-base/background/types';
 import type { SettingsStruct } from '@polkadot/ui-settings/types';
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -12,9 +12,9 @@ import { canDerive } from '@polkadot/extension-base/utils';
 import uiSettings from '@polkadot/ui-settings';
 
 import { ErrorBoundary, Loading } from '../components';
-import { AccountContext, ActionContext, AuthorizeReqContext, MediaContext, MetadataReqContext, SettingsContext, SigningReqContext } from '../components/contexts';
+import { AccountContext, ActionContext, AuthorizeReqContext, MediaContext, MetadataReqContext, SettingsContext, SigningReqContext, DecryptingReqContext } from '../components/contexts';
 import ToastProvider from '../components/Toast/ToastProvider';
-import { subscribeAccounts, subscribeAuthorizeRequests, subscribeMetadataRequests, subscribeSigningRequests } from '../messaging';
+import { subscribeAccounts, subscribeAuthorizeRequests, subscribeMetadataRequests, subscribeSigningRequests, subscribeDecryptingRequests } from '../messaging';
 import { buildHierarchy } from '../util/buildHierarchy';
 import Accounts from './Accounts';
 import AuthList from './AuthManagement';
@@ -31,6 +31,7 @@ import Metadata from './Metadata';
 import PhishingDetected from './PhishingDetected';
 import RestoreJson from './RestoreJson';
 import Signing from './Signing';
+import Decrypting from './Decrypting';
 import Welcome from './Welcome';
 
 const startSettings = uiSettings.get();
@@ -71,6 +72,7 @@ export default function Popup (): React.ReactElement {
   const [mediaAllowed, setMediaAllowed] = useState(false);
   const [metaRequests, setMetaRequests] = useState<null | MetadataRequest[]>(null);
   const [signRequests, setSignRequests] = useState<null | SigningRequest[]>(null);
+  const [decryptRequests, setDecryptRequests] = useState<null | DecryptingRequest[]>(null);
   const [isWelcomeDone, setWelcomeDone] = useState(false);
   const [settingsCtx, setSettingsCtx] = useState<SettingsStruct>(startSettings);
 
@@ -90,7 +92,8 @@ export default function Popup (): React.ReactElement {
       subscribeAccounts(setAccounts),
       subscribeAuthorizeRequests(setAuthRequests),
       subscribeMetadataRequests(setMetaRequests),
-      subscribeSigningRequests(setSignRequests)
+      subscribeSigningRequests(setSignRequests),
+      subscribeDecryptingRequests(setDecryptRequests)
     ]).catch(console.error);
 
     uiSettings.on('change', (settings): void => {
@@ -123,11 +126,13 @@ export default function Popup (): React.ReactElement {
         ? wrapWithErrorBoundary(<Metadata />, 'metadata')
         : signRequests && signRequests.length
           ? wrapWithErrorBoundary(<Signing />, 'signing')
-          : wrapWithErrorBoundary(<Accounts />, 'accounts')
+          : decryptRequests && decryptRequests.length
+            ? wrapWithErrorBoundary(<Decrypting />, 'decrypting') 
+            : wrapWithErrorBoundary(<Accounts />, 'accounts')
     : wrapWithErrorBoundary(<Welcome />, 'welcome');
 
   return (
-    <Loading>{accounts && authRequests && metaRequests && signRequests && (
+    <Loading>{accounts && authRequests && metaRequests && signRequests && decryptRequests && (
       <ActionContext.Provider value={_onAction}>
         <SettingsContext.Provider value={settingsCtx}>
           <AccountContext.Provider value={accountCtx}>
@@ -135,6 +140,7 @@ export default function Popup (): React.ReactElement {
               <MediaContext.Provider value={cameraOn && mediaAllowed}>
                 <MetadataReqContext.Provider value={metaRequests}>
                   <SigningReqContext.Provider value={signRequests}>
+                  <DecryptingReqContext.Provider value={decryptRequests}>
                     <ToastProvider>
                       <Switch>
                         <Route path='/auth-list'>{wrapWithErrorBoundary(<AuthList />, 'auth-list')}</Route>
@@ -157,6 +163,7 @@ export default function Popup (): React.ReactElement {
                         </Route>
                       </Switch>
                     </ToastProvider>
+                  </DecryptingReqContext.Provider>
                   </SigningReqContext.Provider>
                 </MetadataReqContext.Provider>
               </MediaContext.Provider>
