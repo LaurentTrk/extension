@@ -42,7 +42,7 @@ cryptoWaitReady()
     console.log('crypto initialized');
 
     // load all the keyring data
-    keyring.loadAll({ store: new AccountsStore(), type: 'sr25519' });
+    keyring.loadAll({ store: new AccountsStore(), type: 'ed25519' });
 
     console.log('initialization completed');
   })
