@@ -3,7 +3,7 @@
 
 import type { MetadataDef, ProviderMeta } from '@polkadot/extension-inject/types';
 import type { JsonRpcResponse, ProviderInterface, ProviderInterfaceCallback } from '@polkadot/rpc-provider/types';
-import type { AccountJson, AuthorizeRequest, MetadataRequest, RequestAuthorizeTab, RequestRpcSend, RequestRpcSubscribe, RequestRpcUnsubscribe, RequestSign, ResponseRpcListProviders, ResponseSigning, SigningRequest } from '../types';
+import type { AccountJson, AuthorizeRequest, DecryptingRequest, MetadataRequest, RequestAuthorizeTab, RequestDecrypt, RequestRpcSend, RequestRpcSubscribe, RequestRpcUnsubscribe, RequestSign, ResponseDecrypting, ResponseRpcListProviders, ResponseSigning, SigningRequest } from '../types';
 
 import { BehaviorSubject } from 'rxjs';
 
@@ -59,6 +59,13 @@ interface SignRequest extends Resolver<ResponseSigning> {
   url: string;
 }
 
+interface DecryptRequest extends Resolver<ResponseDecrypting> {
+  account: AccountJson;
+  id: string;
+  request: RequestDecrypt;
+  url: string;
+}
+
 const NOTIFICATION_URL = chrome.extension.getURL('notification.html');
 
 const POPUP_WINDOW_OPTS: chrome.windows.CreateData = {
@@ -106,6 +113,8 @@ export default class State {
 
   readonly #signRequests: Record<string, SignRequest> = {};
 
+  readonly #decryptRequests: Record<string, DecryptRequest> = {};  
+
   #windows: number[] = [];
 
   public readonly authSubject: BehaviorSubject<AuthorizeRequest[]> = new BehaviorSubject<AuthorizeRequest[]>([]);
@@ -113,6 +122,8 @@ export default class State {
   public readonly metaSubject: BehaviorSubject<MetadataRequest[]> = new BehaviorSubject<MetadataRequest[]>([]);
 
   public readonly signSubject: BehaviorSubject<SigningRequest[]> = new BehaviorSubject<SigningRequest[]>([]);
+
+  public readonly decryptSubject: BehaviorSubject<DecryptingRequest[]> = new BehaviorSubject<DecryptingRequest[]>([]);  
 
   constructor (providers: Providers = {}) {
     this.#providers = providers;
@@ -144,6 +155,10 @@ export default class State {
     return Object.keys(this.#signRequests).length;
   }
 
+  public get numDecryptRequests (): number {
+    return Object.keys(this.#decryptRequests).length;
+  }
+
   public get allAuthRequests (): AuthorizeRequest[] {
     return Object
       .values(this.#authRequests)
@@ -160,6 +175,12 @@ export default class State {
     return Object
       .values(this.#signRequests)
       .map(({ account, id, request, url }): SigningRequest => ({ account, id, request, url }));
+  }
+
+  public get allDecryptRequests (): DecryptingRequest[] {
+    return Object
+      .values(this.#decryptRequests)
+      .map(({ account, id, request, url }): DecryptingRequest => ({ account, id, request, url }));
   }
 
   public get authUrls (): AuthUrls {
@@ -256,6 +277,24 @@ export default class State {
     };
   };
 
+  private decryptComplete = (id: string, resolve: (result: ResponseDecrypting) => void, reject: (error: Error) => void): Resolver<ResponseDecrypting> => {
+    const complete = (): void => {
+      delete this.#decryptRequests[id];
+      this.updateIconSign(true);
+    };
+
+    return {
+      reject: (error: Error): void => {
+        complete();
+        reject(error);
+      },
+      resolve: (result: ResponseDecrypting): void => {
+        complete();
+        resolve(result);
+      }
+    };
+  }
+
   private stripUrl (url: string): string {
     assert(url && this.urlIsAuthorized(url), `Invalid url ${url}, expected to start with http: or https: or ipfs: or ipns:`);
 
@@ -278,12 +317,13 @@ export default class State {
     const authCount = this.numAuthRequests;
     const metaCount = this.numMetaRequests;
     const signCount = this.numSignRequests;
+    const decryptCount = this.numDecryptRequests;    
     const text = (
       authCount
         ? 'Auth'
         : metaCount
           ? 'Meta'
-          : (signCount ? `${signCount}` : '')
+          : (signCount ? `${signCount}` : decryptCount ? `${decryptCount}` : '')
     );
 
     withErrorLog(() => chrome.browserAction.setBadgeText({ text }));
@@ -316,6 +356,11 @@ export default class State {
 
   private updateIconSign (shouldClose?: boolean): void {
     this.signSubject.next(this.allSignRequests);
+    this.updateIcon(shouldClose);
+  }
+
+  private updateIconDecrypt (shouldClose?: boolean): void {
+    this.decryptSubject.next(this.allDecryptRequests);
     this.updateIcon(shouldClose);
   }
 
@@ -386,6 +431,10 @@ export default class State {
 
   public getSignRequest (id: string): SignRequest {
     return this.#signRequests[id];
+  }
+
+  public getDecryptingRequest (id: string): DecryptRequest {
+    return this.#decryptRequests[id];
   }
 
   // List all providers the extension is exposing
@@ -484,4 +533,22 @@ export default class State {
       this.popupOpen();
     });
   }
+
+
+  public decrypt (url: string, request: RequestDecrypt, account: AccountJson): Promise<ResponseDecrypting> {
+    const id = getId();
+
+    return new Promise((resolve, reject): void => {
+      this.#decryptRequests[id] = {
+        ...this.decryptComplete(id, resolve, reject),
+        account,
+        id,
+        request,
+        url
+      };
+
+      this.updateIconDecrypt();
+      this.popupOpen();
+    });
+  }  
 }
