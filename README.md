@@ -73,6 +73,8 @@ interface Injected {
   readonly accounts: Accounts;
   // the standard Signer interface for the API, as detailed below
   readonly signer: Signer;
+  // the standard Decrypter interface for the API, as detailed below
+  readonly decrypter: Decrypter;
   // not injected as of yet, subscribable provider for polkadot-js API injection,
   // this can be passed to the API itself upon construction in the dapp
   // readonly provider?: Provider
@@ -99,6 +101,13 @@ interface Accounts {
 interface Signer extends SignerInterface {
   // no specific signer extensions, exposes the `sign` interface for use by
   // the polkadot-js API, confirming the Signer interface for this API
+}
+
+// a decrypter that communicates with the extension via sendMessage
+interface Decrypter extends DecrypterInterface {
+  // Decrypts a message using the private key of a given account identified by its ss-58 encoded address.
+  // The message should have been encrypted using `@polkadot/util-crypto`'s `encrypt` function.
+  decrypt: (payload: DecryptPayload) => Promise<DecrypterResult>;
 }
 ```
 

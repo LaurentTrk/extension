@@ -8,6 +8,7 @@ import Accounts from './Accounts';
 import Metadata from './Metadata';
 import PostMessageProvider from './PostMessageProvider';
 import Signer from './Signer';
+import Decrypter from './Decrypter';
 
 export default class implements Injected {
   public readonly accounts: Accounts;
@@ -18,10 +19,13 @@ export default class implements Injected {
 
   public readonly signer: Signer;
 
+  public readonly decrypter: Decrypter;
+
   constructor (sendRequest: SendRequest) {
     this.accounts = new Accounts(sendRequest);
     this.metadata = new Metadata(sendRequest);
     this.provider = new PostMessageProvider(sendRequest);
     this.signer = new Signer(sendRequest);
+    this.decrypter = new Decrypter(sendRequest);
   }
 }

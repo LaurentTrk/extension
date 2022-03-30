@@ -5,6 +5,7 @@ import type { Signer as InjectedSigner } from '@polkadot/api/types';
 import type { ProviderInterface } from '@polkadot/rpc-provider/types';
 import type { ExtDef } from '@polkadot/types/extrinsic/signedExtensions/types';
 import type { KeypairType } from '@polkadot/util-crypto/types';
+import type { HexString } from '@polkadot/util/types';
 
 // eslint-disable-next-line no-undef
 type This = typeof globalThis;
@@ -91,11 +92,41 @@ export interface InjectedProviderWithMeta {
   meta: ProviderMeta;
 }
 
+export interface DecrypterResult {
+  /**
+     * @description The id for this request
+     */
+   id: number;
+   /**
+    * @description The resulting signature in hex
+    */
+   decrypted: HexString | null;
+}
+
+export interface DecryptPayload {
+  /**
+   * @description The ss-58 encoded address
+   */
+  address: string;
+  /**
+   * @description The hex-encoded encrypted data to decrypt
+   */
+  encrypted: HexString;
+}
+
+export interface InjectedDecrypter {
+  /**
+    * @description Decrypts the given encrypted message
+    */
+  decrypt: (payload: DecryptPayload) => Promise<DecrypterResult>;
+}
+
 export interface Injected {
   accounts: InjectedAccounts;
   metadata?: InjectedMetadata;
   provider?: InjectedProvider;
   signer: InjectedSigner;
+  decrypter: InjectedDecrypter;
 }
 
 export interface InjectedWindowProvider {

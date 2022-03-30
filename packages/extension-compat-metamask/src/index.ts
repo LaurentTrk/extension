@@ -1,7 +1,7 @@
 // Copyright 2019-2020 @polkadot/extension-dapp authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Injected, InjectedAccount, InjectedWindow } from '@polkadot/extension-inject/types';
+import type { DecrypterResult, DecryptPayload, Injected, InjectedAccount, InjectedWindow } from '@polkadot/extension-inject/types';
 import type { SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import type { HexString } from '@polkadot/util/types';
 
@@ -78,6 +78,13 @@ function injectMetaMaskWeb3 (win: Web3Window): void {
             const signature = (await provider.request({ method: 'eth_sign', params: [raw.address, Web3.utils.sha3(raw.data)] })) as HexString;
 
             return { id: 0, signature };
+          }
+        },
+        decrypter: {
+          decrypt: async (payload: DecryptPayload): Promise<DecrypterResult> => {
+            const decrypted = (await provider.request({ method: 'eth_decrypt', params: [payload.encrypted, payload.address] })) as HexString;
+
+            return { id: 0, decrypted };
           }
         }
       };

@@ -2546,6 +2546,7 @@ __metadata:
     "@babel/runtime": ^7.16.5
     "@polkadot/rpc-provider": ^7.0.1
     "@polkadot/types": ^7.0.1
+    "@polkadot/util": ^8.2.2
     "@polkadot/util-crypto": ^8.2.2
     "@types/chrome": ^0.0.171
     "@types/firefox-webext-browser": ^94.0.0
@@ -2671,17 +2672,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/keyring@npm:^8.2.2":
-  version: 8.2.2
-  resolution: "@polkadot/keyring@npm:8.2.2"
+"@polkadot/keyring@file:../polkadot-js-common-laurenttrk/packages/keyring/build::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 8.2.3-0
+  resolution: "@polkadot/keyring@file:../polkadot-js-common-laurenttrk/packages/keyring/build#../polkadot-js-common-laurenttrk/packages/keyring/build::hash=ee10c5&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/runtime": ^7.16.5
-    "@polkadot/util": 8.2.2
-    "@polkadot/util-crypto": 8.2.2
+    "@polkadot/util": 8.2.3-0
+    "@polkadot/util-crypto": 8.2.3-0
   peerDependencies:
-    "@polkadot/util": 8.2.2
-    "@polkadot/util-crypto": 8.2.2
-  checksum: 9ed75d2dbe69adac418c3f4f26932eea381c3a90ff7b55b42a0b73ad2525ae628f5673eb95cbf784aeafcbdbd10c650ee301740391a4cb63b8d5616a479489c8
+    "@polkadot/util": 8.2.3-0
+    "@polkadot/util-crypto": 8.2.3-0
+  checksum: 502535872297784f3820a89e8750c041c577247cbb9de0be8d14946cef2d1c40c88a5dae5d95f670ee6044f5d39188d5d3d000eb66c379578b3f145d25b88c90
   languageName: node
   linkType: hard
 
@@ -2922,24 +2923,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/util-crypto@npm:^8.2.2":
-  version: 8.2.2
-  resolution: "@polkadot/util-crypto@npm:8.2.2"
+"@polkadot/util-crypto@file:../polkadot-js-common-laurenttrk/packages/util-crypto/build::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 8.2.3-0
+  resolution: "@polkadot/util-crypto@file:../polkadot-js-common-laurenttrk/packages/util-crypto/build#../polkadot-js-common-laurenttrk/packages/util-crypto/build::hash=6b8311&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/runtime": ^7.16.5
     "@noble/hashes": ^0.4.5
     "@noble/secp256k1": ^1.3.4
-    "@polkadot/networks": 8.2.2
-    "@polkadot/util": 8.2.2
+    "@polkadot/networks": 8.2.3-0
+    "@polkadot/util": 8.2.3-0
     "@polkadot/wasm-crypto": ^4.5.1
-    "@polkadot/x-bigint": 8.2.2
-    "@polkadot/x-randomvalues": 8.2.2
+    "@polkadot/x-bigint": 8.2.3-0
+    "@polkadot/x-randomvalues": 8.2.3-0
     ed2curve: ^0.3.0
     micro-base: ^0.10.0
     tweetnacl: ^1.0.3
   peerDependencies:
-    "@polkadot/util": 8.2.2
-  checksum: 04b358937570498428cd78f642cf0d8f25e44315dbfb54cfaf2de10806252f20aa8df2eda1d139d58e2efd5b1fb4d5bdc5d5756b1d25017b98fe03d2beeefbc6
+    "@polkadot/util": 8.2.3-0
+  checksum: f55f3fe63e9390720fb7c9a46eded98dd05e4787ac178f14835e2f16afb5061112a25589954d68aa28899c08216b9e4b5f70e422b22b542d253267629d443fc0
   languageName: node
   linkType: hard
 
@@ -3001,6 +3002,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@polkadot/x-bigint@npm:8.2.3-0":
+  version: 8.2.3-0
+  resolution: "@polkadot/x-bigint@npm:8.2.3-0"
+  dependencies:
+    "@babel/runtime": ^7.16.5
+    "@polkadot/x-global": 8.2.3-0
+  checksum: 38ca98d7960d0e379da049f0304f2f1dff8d2bac9bcb6ad21902ae19a8d3085134d9ba56b9b4a5e1321c2089abc73384ff874703f059fd25579d5dc0980300b7
+  languageName: node
+  linkType: hard
+
 "@polkadot/x-fetch@npm:^8.2.2":
   version: 8.2.2
   resolution: "@polkadot/x-fetch@npm:8.2.2"
@@ -3022,13 +3033,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/x-randomvalues@npm:8.2.2":
-  version: 8.2.2
-  resolution: "@polkadot/x-randomvalues@npm:8.2.2"
+"@polkadot/x-global@npm:8.2.3-0":
+  version: 8.2.3-0
+  resolution: "@polkadot/x-global@npm:8.2.3-0"
   dependencies:
     "@babel/runtime": ^7.16.5
-    "@polkadot/x-global": 8.2.2
-  checksum: 18817fe2374b3e0e2bebd2df98d68720df037cbc29363d2e4701f1e894c52ddaabd41d16022cef532860b0ccbb5e6d51f6245b47f5aafc4d0eeb7285736b0309
+  checksum: 944a5accd168bd9706489f566994c0af665bfde8a9a518ac558427c35ec914006a7d88105d3e749f71a3a6154de94ba06fd72cc9643b2b349f7e53f9b4935de6
+  languageName: node
+  linkType: hard
+
+"@polkadot/x-randomvalues@npm:8.2.3-0":
+  version: 8.2.3-0
+  resolution: "@polkadot/x-randomvalues@npm:8.2.3-0"
+  dependencies:
+    "@babel/runtime": ^7.16.5
+    "@polkadot/x-global": 8.2.3-0
+  checksum: 755c1ad6f1f26b71adb983ed3b8b8403db32a1a0b8ab633a5387bcd3999e885f11831a7c22546f133c04859f54032795992bb2479e6739a499cd876fb41138c1
   languageName: node
   linkType: hard
 

@@ -41,11 +41,11 @@
   },
   "resolutions": {
     "@polkadot/api": "^7.0.1",
-    "@polkadot/keyring": "^8.2.2",
+    "@polkadot/keyring": "../polkadot-js-common-laurenttrk/packages/keyring/build",
     "@polkadot/networks": "^8.2.2",
     "@polkadot/types": "^7.0.1",
     "@polkadot/util": "^8.2.2",
-    "@polkadot/util-crypto": "^8.2.2",
+    "@polkadot/util-crypto": "../polkadot-js-common-laurenttrk/packages/util-crypto/build",
     "@polkadot/x-fetch": "^8.2.2",
     "babel-core": "^7.0.0-bridge.0",
     "safe-buffer": "^5.2.1",
