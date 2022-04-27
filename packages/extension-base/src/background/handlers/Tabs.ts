@@ -1,7 +1,7 @@
 // Copyright 2019-2021 @polkadot/extension authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { InjectedAccount, InjectedMetadataKnown, MetadataDef, ProviderMeta } from '@polkadot/extension-inject/types';
+import type { DecryptPayload, InjectedAccount, InjectedMetadataKnown, MetadataDef, ProviderMeta } from '@polkadot/extension-inject/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { JsonRpcResponse } from '@polkadot/rpc-provider/types';
 import type { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
@@ -82,7 +82,7 @@ export default class Tabs {
     return this.#state.sign(url, new RequestBytesSign(request), { address, ...pair.meta });
   }
 
-  private bytesDecrypt (url: string, request: SignerPayloadRaw): Promise<ResponseDecrypting> {
+  private bytesDecrypt (url: string, request: DecryptPayload): Promise<ResponseDecrypting> {
     const address = request.address;
     const pair = this.getSigningPair(address);
 
@@ -200,7 +200,7 @@ export default class Tabs {
         return this.bytesSign(url, request as SignerPayloadRaw);
 
       case 'pub(bytes.decrypt)':
-        return this.bytesDecrypt(url, request as SignerPayloadRaw);
+        return this.bytesDecrypt(url, request as DecryptPayload);
   
       case 'pub(extrinsic.sign)':
         return this.extrinsicSign(url, request as SignerPayloadJSON);

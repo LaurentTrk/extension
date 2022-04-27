@@ -9,7 +9,7 @@ import { PASSWORD_EXPIRY_MIN } from '@polkadot/extension-base/defaults';
 import { ActionBar, ActionContext, Button, ButtonArea, Checkbox, Link } from '../../../components';
 import useTranslation from '../../../hooks/useTranslation';
 import { approveDecryptPassword, cancelDecryptRequest, isSignLocked } from '../../../messaging';
-import Unlock from '../Unlock';
+import Unlock from '../../Signing/Unlock';
 
 interface Props {
   buttonText: string;

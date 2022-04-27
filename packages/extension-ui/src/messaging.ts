@@ -119,10 +119,6 @@ export async function approveSignSignature (id: string, signature: HexString): P
   return sendMessage('pri(signing.approve.signature)', { id, signature });
 }
 
-export async function approveDecrypting (id: string, decrypted: string): Promise<boolean> {
-  return sendMessage('pri(decrypting.approve)', { id, decrypted });
-}
-
 export async function approveDecryptPassword (id: string, savePass: boolean, password?: string): Promise<boolean> {
   return sendMessage('pri(decrypting.approve.password)', { id, password, savePass });
 }

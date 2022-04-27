@@ -8,8 +8,8 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Loading, DecryptingReqContext } from '../../components';
 import useTranslation from '../../hooks/useTranslation';
 import { Header } from '../../partials';
+import TransactionIndex from '../Signing/TransactionIndex';
 import Request from './Request';
-import TransactionIndex from './TransactionIndex';
 
 export default function Decrypting (): React.ReactElement {
   const { t } = useTranslation();

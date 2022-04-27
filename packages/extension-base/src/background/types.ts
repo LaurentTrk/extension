@@ -3,7 +3,7 @@
 
 /* eslint-disable no-use-before-define */
 
-import type { InjectedAccount, InjectedMetadataKnown, MetadataDef, ProviderList, ProviderMeta } from '@polkadot/extension-inject/types';
+import type { DecryptPayload, InjectedAccount, InjectedMetadataKnown, MetadataDef, ProviderList, ProviderMeta } from '@polkadot/extension-inject/types';
 import type { KeyringPair, KeyringPair$Json, KeyringPair$Meta } from '@polkadot/keyring/types';
 import type { JsonRpcResponse } from '@polkadot/rpc-provider/types';
 import type { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
@@ -118,7 +118,6 @@ export interface RequestSignatures {
   'pri(signing.isLocked)': [RequestSigningIsLocked, ResponseSigningIsLocked];
   'pri(signing.requests)': [RequestSigningSubscribe, boolean, SigningRequest[]];
   'pri(decrypting.requests)': [RequestDecryptingSubscribe, boolean, DecryptingRequest[]];
-  'pri(decrypting.approve)': [RequestDecryptingApprove, boolean];
   'pri(decrypting.approve.password)': [RequestSigningApprovePassword, boolean];
   'pri(decrypting.cancel)': [RequestDecryptingCancel, boolean];
   'pri(window.open)': [AllowedPath, boolean];
@@ -127,7 +126,7 @@ export interface RequestSignatures {
   'pub(accounts.subscribe)': [RequestAccountSubscribe, boolean, InjectedAccount[]];
   'pub(authorize.tab)': [RequestAuthorizeTab, null];
   'pub(bytes.sign)': [SignerPayloadRaw, ResponseSigning];
-  'pub(bytes.decrypt)': [SignerPayloadRaw, ResponseDecrypting];
+  'pub(bytes.decrypt)': [DecryptPayload, ResponseDecrypting];
   'pub(extrinsic.sign)': [SignerPayloadJSON, ResponseSigning];
   'pub(metadata.list)': [null, InjectedMetadataKnown[]];
   'pub(metadata.provide)': [MetadataDef, boolean];
@@ -308,11 +307,6 @@ export interface ResponseSigningIsLocked {
 export type RequestSigningSubscribe = null;
 export type RequestDecryptingSubscribe = null;
 
-export interface RequestDecryptingApprove {
-  id: string;
-  decrypted: string;
-}
-
 export interface RequestDecryptingApprovePassword {
   id: string;
   password?: string;
@@ -369,7 +363,7 @@ export interface ResponseSigning {
 
 export interface ResponseDecrypting {
   id: string;
-  decrypted: string;
+  decrypted: HexString;
 }
 
 export interface ResponseDeriveValidate {
@@ -413,9 +407,9 @@ export interface RequestSign {
 }
 
 export interface RequestDecrypt {
-  readonly payload: SignerPayloadRaw;
+  readonly payload: DecryptPayload;
 
-  decrypt (registry: TypeRegistry, pair: KeyringPair): { decrypted: string };
+  decrypt (registry: TypeRegistry, pair: KeyringPair): { decrypted: HexString | null };
 }
 
 export interface RequestJsonRestore {
